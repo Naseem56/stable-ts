@@ -108,9 +108,12 @@ def load_hf_adapter_pipe(adapter_path: str, base_model: str, device: str = None,
 
 class WhisperHF:
 
-    def __init__(self, model_name: str, device: str = None, flash: bool = False, pipeline=None):
+    def __init__(self, model_name: str, device: str = None, flash: bool = False, pipeline=None, adapter=False, base_model=None):
         self._model_name = model_name
-        self._pipe = load_hf_pipe(self._model_name, device, flash=flash) if pipeline is None else pipeline
+        if adapter:
+            self._pipe = load_hf_adapter_pipe(self._model_name, base_model, device, flash=flash) if pipeline is None else pipeline
+        else:
+            self._pipe = load_hf_pipe(self._model_name, device, flash=flash) if pipeline is None else pipeline
         self._model_name = getattr(self._pipe.model, 'name_or_path', self._model_name)
 
     @property
