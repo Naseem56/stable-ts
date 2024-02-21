@@ -70,6 +70,42 @@ def load_hf_pipe(model_name: str, device: str = None, flash: bool = False):
     return pipe
 
 
+def load_hf_adapter_pipe(adapter_path: str, base_model: str, device: str = None, flash: bool = False):
+    from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+    device = get_device(device)
+    is_cpu = (device if isinstance(device, str) else getattr(device, 'type', None)) == 'cpu'
+    dtype = torch.float32 if is_cpu or not torch.cuda.is_available() else torch.float16
+    model_id = HF_MODELS.get(base_model, base_model)
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        adapter_path,
+        torch_dtype=dtype,
+        low_cpu_mem_usage=True,
+        use_safetensors=True,
+        use_flash_attention_2=flash
+    ).to(device)
+
+    processor = AutoProcessor.from_pretrained(model_id)
+
+    if not flash:
+        try:
+            model = model.to_bettertransformer()
+        except ValueError:
+            pass
+
+    pipe = pipeline(
+        "automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        max_new_tokens=128,
+        chunk_length_s=30,
+        torch_dtype=dtype,
+        device=device,
+    )
+
+    return pipe
+
+
 class WhisperHF:
 
     def __init__(self, model_name: str, device: str = None, flash: bool = False, pipeline=None):
