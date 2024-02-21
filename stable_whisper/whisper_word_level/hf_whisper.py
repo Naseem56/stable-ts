@@ -298,5 +298,5 @@ class WhisperHF:
         )
 
 
-def load_hf_whisper(model_name: str, device: str = None, flash: bool = False, pipeline=None):
-    return WhisperHF(model_name, device, flash=flash, pipeline=pipeline)
+def load_hf_whisper(model_name: str, device: str = None, flash: bool = False, pipeline=None, adapter=False, base_model=None):
+    return WhisperHF(model_name, device, flash=flash, pipeline=pipeline, adapter=adapter, base_model=base_model)
